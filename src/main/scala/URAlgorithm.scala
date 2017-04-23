@@ -34,6 +34,7 @@ import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import org.template.conversions._
 
+import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import scala.concurrent.duration.Duration
 import scala.language.{ implicitConversions, postfixOps }
@@ -449,18 +450,18 @@ class URAlgorithm(val ap: URAlgorithmParams)
     val predictedResult = searchHitsOpt match {
       case Some(searchHits) =>
         val recs = searchHits.getHits.map { hit =>
+          val source = hit.getSource
           if (withRanks) {
-            val source = hit.getSource
             val ranks: Map[String, Double] = rankingsParams map { backfillParams =>
               val backfillType = backfillParams.`type`.getOrElse(defaultURAlgorithmParams.DefaultBackfillType)
               val backfillFieldName = backfillParams.name.getOrElse(PopModel.nameByType(backfillType))
               backfillFieldName -> source.get(backfillFieldName).asInstanceOf[Double]
             } toMap
 
-            ItemScore(hit.getId, hit.getScore.toDouble,
+            ItemScore(hit.getId, source.toMap, hit.getScore.toDouble,
               ranks = if (ranks.nonEmpty) Some(ranks) else None)
           } else {
-            ItemScore(hit.getId, hit.getScore.toDouble)
+            ItemScore(hit.getId, source.toMap, hit.getScore.toDouble)
           }
         }
         logger.info(s"Results: ${searchHits.getHits.length} retrieved of a possible ${searchHits.totalHits()}")

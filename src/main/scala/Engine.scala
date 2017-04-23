@@ -68,6 +68,7 @@ case class PredictedResult(
 
 case class ItemScore(
   item: ItemID, // item id
+  source: Map[String, Object],
   score: Double, // used to rank, original score returned from teh search engine
   ranks: Option[Map[String, Double]] = None) extends Serializable
 
